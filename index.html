@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio do Amor | Evelyn</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fontes Premium -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Alex+Brush&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Confetti JS -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* --- Variáveis de Cores (Tema Galáxia) --- */
+        :root {
+            --galaxy-dark: #0f0518;
+            --galaxy-purple: #4c1d95;
+            --galaxy-pink: #d946ef;
+            --neon-blue: #00f3ff;
+            --gold: #ffd700;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--galaxy-dark);
+            color: white;
+            overflow-x: hidden;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* Fontes Especiais */
+        .font-script { font-family: 'Alex Brush', cursive; }
+        .font-title { font-family: 'Cinzel', serif; }
+
+        /* --- Fundo Animado --- */
+        .stars-bg {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+            z-index: -2;
+        }
+        
+        .stars-bg::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            animation: twinkle 4s infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.5; transform: translateY(0); }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.5; transform: translateY(-20px); }
+        }
+
+        /* --- Estilos Gerais --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.5s ease;
+        }
+
+        .btn-galaxy {
+            background: linear-gradient(90deg, var(--galaxy-purple), var(--galaxy-pink));
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .btn-galaxy:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px var(--galaxy-pink);
+        }
+
+        /* --- Foto em Orbita --- */
+        .orbit-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 2rem;
+        }
+        .main-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.3);
+            box-shadow: 0 0 30px var(--galaxy-purple);
+            animation: pulse-glow 3s infinite alternate;
+        }
+        .planet-ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 260px; height: 260px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: spin 15s linear infinite;
+        }
+        .planet-ring::before {
+            content: ''; position: absolute; top: 0; left: 50%;
+            width: 10px; height: 10px; background: var(--neon-blue);
+            border-radius: 50%; box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes pulse-glow { from { box-shadow: 0 0 20px var(--galaxy-purple); } to { box-shadow: 0 0 50px var(--galaxy-pink); } }
+
+        /* --- Telas --- */
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* Correção da Tela da Carta para Centralização Perfeita */
+        #screen-letter {
+            position: fixed; /* Ocupa toda a tela */
+            inset: 0;
+            display: none;
+            overflow-y: auto; /* Permite rolar se for longo */
+            padding: 20px;
+        }
+
+        #screen-letter.active {
+            display: flex;
+            flex-direction: column; /* Organiza verticalmente */
+        }
+
+        /* Container interno para centralizar automaticamente */
+        #screen-letter .glass-card {
+            margin: auto; /* O segredo para centralizar vertical/horizontal no flex */
+            width: 100%;
+            max-width: 42rem; /* 2xl do tailwind */
+        }
+
+        /* --- Scrollbar Custom --- */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--galaxy-pink); border-radius: 3px; }
+
+        /* --- Versículo Bíblico --- */
+        .bible-box {
+            background: rgba(255,215,0,0.05);
+            border-left: 4px solid var(--gold);
+            padding: 20px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #ddd;
+        }
+
+        /* --- Stitch --- */
+        .stitch-popup {
+            position: fixed;
+            bottom: -200px;
+            right: 20px;
+            width: 150px;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 50;
+        }
+        .stitch-popup.show { bottom: 0; }
+
+        /* Marca d'água da foto no quiz */
+        .bg-watermark {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px; height: 300px;
+            background-image: url('Evelyn.jpeg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.1;
+            border-radius: 50%;
+            filter: blur(2px);
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars-bg"></div>
+
+    <!-- Música -->
+    <audio id="bg-music" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/10/25/audio_1e3a2b53f6.mp3?filename=romantic-piano-125066.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- TELA 1: INTRO -->
+    <div id="screen-intro" class="screen active">
+        <div class="orbit-container">
+            <div class="planet-ring"></div>
+            <img src="Evelyn.jpeg" class="main-photo" alt="Nós">
+        </div>
+        <h1 class="font-title text-5xl md:text-6xl text-center mb-2" style="text-shadow: 0 0 20px rgba(255,255,255,0.5)">EVELYN</h1>
+        <p class="font-script text-3xl text-pink-400 mb-8">Meu Universo Particular</p>
+        <button class="btn-galaxy max-w-xs animate-bounce" onclick="startGame()">
+            <i class="fas fa-play mr-2"></i> Começar Desafio
+        </button>
+    </div>
+
+    <!-- TELA 2: QUIZ -->
+    <div id="screen-quiz" class="screen">
+        <div class="glass-card p-8 w-full max-w-md relative overflow-hidden">
+            <!-- Foto de fundo (marca d'água) -->
+            <div class="bg-watermark"></div>
+
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-sm text-gray-400 font-bold uppercase tracking-wider">Desafio do Amor</span>
+                <span id="level-indicator" class="bg-pink-600 px-3 py-1 rounded-full text-xs font-bold">Nível 1/5</span>
+            </div>
+
+            <h2 id="question-text" class="text-2xl font-bold mb-8 text-center min-h-[80px] flex items-center justify-center">
+                Carregando...
+            </h2>
+
+            <div id="options-container" class="space-y-3">
+                <!-- Botões gerados via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 3: CARTA FINAL (Com Centralização Corrigida) -->
+    <div id="screen-letter" class="custom-scroll">
+        <div class="glass-card p-8 mb-10 relative">
+            
+            <!-- Foto no Topo da Carta -->
+            <div class="flex justify-center mb-6">
+                <div class="w-32 h-32 rounded-full border-4 border-pink-500 shadow-[0_0_30px_rgba(217,70,239,0.6)] overflow-hidden bg-black">
+                    <img src="Evelyn.jpeg" class="w-full h-full object-cover">
+                </div>
+            </div>
+
+            <h2 class="font-script text-5xl text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 mb-8">
+                Minha Amada Evelyn
+            </h2>
+
+            <div class="space-y-6 text-lg font-light leading-relaxed text-gray-100 text-justify">
+                <p>
+                    <span class="text-6xl float-left mr-2 font-script text-pink-500 line-height-none">S</span>abe, eu imaginava como seria o amor de verdade. Mas, mais do que imaginar, eu orei. Em silêncio, eu pedi a Deus que me enviasse alguém que fosse luz, que fosse paz e que compartilhasse a mesma essência de vida. com o coração em prece, por você.
+                </p>
+                <p>
+                    E então você chegou. Você é a resposta mais linda e perfeita que Deus me deu. Olhar para o nosso relacionamento é ver a prova viva de que as orações do coração são ouvidas e atendidas.
+                </p>
+                <p>
+                    Cada momento ao seu lado se torna inacreditável, como se a mão de Deus estivesse abençoando cada passo que damos juntos. Eu amo com uma intensidade que transborda o seu jeitinho, aquele que é só seu, que me desarma e me faz sorrir no mesmo instante. Amo cada detalhe, cada traço que te faz ser a mulher incrível que Ele me confiou.
+                </p>
+                <p>
+                    E porque este amor é sobrenatural, ele precisa de uma base indestrutível.
+                </p>
+                <p>
+                    É por isso que, para nós, o amor não é apenas um sentimento, mas uma escolha diária e uma promessa sagrada. É exatamente o que a palavra nos ensina e o que em breve estará eternizado em nossas alianças:
+                </p>
+                
+                <div class="bible-box">
+                    <p>
+                        "O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha. Não maltrata, não procura os próprios interesses, não se ira, não guarda rancor. O amor não se alegra com a injustiça, mas se alegra com a verdade. Tudo sofre, tudo crê, tudo espera, tudo suporta."
+                    </p>
+                    <p class="text-right text-sm mt-2 font-bold text-gold opacity-80">(1 Coríntios 13:4-7)</p>
+                </div>
+
+                <p>
+                    Esse é o nosso mapa, a nossa fundação, o nosso juramento. É o caminho que escolhemos para construir, dia após dia, a nossa vida.
+                </p>
+                <p>
+                    Meu amor, eu amo você MUITO. Amo com a gratidão de quem recebeu o maior presente. Obrigado por ser a minha pessoa, a minha parceira de fé, e o meu lar.
+                </p>
+                <p>
+                    Que Deus continue a guiar e abençoar cada passo nosso, conforme a Sua perfeita definição de amor.
+                </p>
+                <p>
+                    Com todo o meu amor, a gratidão e a certeza da nossa benção, hoje e para a eternidade.
+                </p>
+
+                <div class="text-center py-8 border-t border-white/10 mt-8">
+                    <p class="font-title text-4xl text-pink-400 mb-2 transform hover:scale-110 transition duration-300 cursor-default" style="text-shadow: 0 0 20px rgba(217,70,239,0.5);">
+                        Eu te amo Mil Milhões!
+                    </p>
+                    <p class="font-script text-3xl text-white mt-4">Daniel</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stitch Animation (Apenas ele, sem confetes extras) -->
+    <img id="stitch-img" src="https://media.tenor.com/KOzC2aYwM4oAAAAi/stitch-flower.gif" class="stitch-popup" alt="Stitch">
+
+    <!-- Botão de Som -->
+    <div class="fixed top-5 right-5 z-50">
+        <button onclick="toggleMusic()" class="w-10 h-10 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white hover:bg-white/20 transition flex items-center justify-center">
+           <i id="music-icon" class="fas fa-volume-up"></i>
+        </button>
+   </div>
+
+    <script>
+        /* --- DADOS DO JOGO --- */
+        const questions = [
+            {
+                text: "Se o nosso amor fosse uma obra de arte, qual seria?",
+                options: ["Mona Lisa", "A Noite Estrelada", "Uma obra-prima única e eterna", "O Grito"],
+                correct: 2
+            },
+            {
+                text: "Qual é o tamanho do meu amor por você?",
+                options: ["Do tamanho do universo", "Até o Infinito", "Do tamanho da Terra", "Um pouquinho"],
+                correct: 1 // Índice 1 = Até o Infinito
+            },
+            {
+                text: "Qual será o nome do nosso futuro filho?",
+                options: ["Naruto", "Goku", "Luffy", "Ichigo"],
+                correct: 1 // Índice 1 = Goku
+            },
+            {
+                text: "O que eu sinto quando vejo você sorrir?",
+                options: ["Nada", "Fome", "Que o mundo para e tudo faz sentido", "Sono"],
+                correct: 2
+            },
+            {
+                text: "Qual é o meu lugar favorito no mundo?",
+                options: ["Na praia", "Jogando videogame", "Qualquer lugar, desde que seja ao seu lado", "No trabalho"],
+                correct: 2
+            }
+        ];
+
+        let currentQuestion = 0;
+
+        /* --- LÓGICA --- */
+        const introScreen = document.getElementById('screen-intro');
+        const quizScreen = document.getElementById('screen-quiz');
+        const letterScreen = document.getElementById('screen-letter');
+        const music = document.getElementById('bg-music');
+
+        function startGame() {
+            // Tocar música
+            music.volume = 0.4;
+            music.play().catch(e => console.log("Audio block"));
+
+            // Trocar tela
+            introScreen.classList.remove('active');
+            setTimeout(() => {
+                introScreen.style.display = 'none';
+                quizScreen.classList.add('active');
+                loadQuestion();
+            }, 800);
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('question-text').innerText = q.text;
+            document.getElementById('level-indicator').innerText = `Pergunta ${currentQuestion + 1}/${questions.length}`;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = ''; // Limpar
+
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-galaxy';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, q.correct);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct) {
+            // Lógica para aceitar "Todas as anteriores" ou a resposta correta
+            if (selected === correct || questions[currentQuestion].correct === 3 && selected === 3) { 
+                
+                // Confete APENAS ao acertar a pergunta (pequeno feedback)
+                confetti({
+                    particleCount: 50,
+                    spread: 60,
+                    origin: { y: 0.7 },
+                    colors: ['#d946ef', '#4c1d95']
+                });
+
+                currentQuestion++;
+                if (currentQuestion < questions.length) {
+                    setTimeout(loadQuestion, 1000);
+                } else {
+                    setTimeout(showLetter, 1200);
+                }
+            } else {
+                // Errou
+                const container = document.getElementById('options-container');
+                container.classList.add('animate-pulse');
+                setTimeout(() => container.classList.remove('animate-pulse'), 500);
+                alert("Essa não! Tente de novo, meu amor ❤️");
+            }
+        }
+
+        function showLetter() {
+            quizScreen.classList.remove('active');
+            setTimeout(() => {
+                quizScreen.style.display = 'none';
+                
+                // Mostrar a carta (a classe active aplica flex)
+                letterScreen.classList.add('active');
+                
+                // Mostrar Stitch com delay suave
+                setTimeout(() => {
+                    document.getElementById('stitch-img').classList.add('show');
+                }, 500);
+
+            }, 800);
+        }
+
+        function toggleMusic() {
+            const icon = document.getElementById('music-icon');
+            if (music.paused) {
+                music.play();
+                icon.className = 'fas fa-volume-up';
+            } else {
+                music.pause();
+                icon.className = 'fas fa-volume-mute';
+            }
+        }
+    </script>
+</body>
+</html>
